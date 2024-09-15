@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problema dos Filósofos Jantando com Garçom</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Problema dos Filósofos Jantando com Garçom</h1>
+
+    <!-- Mesa com os filósofos -->
+    <div class="mesa">
+      <div>
+        <div id="filosofo-1" class="filosofo thinking">Filósofo 1</div>
+        <div id="contador-1" class="contador">Comeu: 0 vezes</div>
+      </div>
+      <div>
+        <div id="filosofo-2" class="filosofo thinking">Filósofo 2</div>
+        <div id="contador-2" class="contador">Comeu: 0 vezes</div>
+      </div>
+      <div>
+        <div id="filosofo-3" class="filosofo thinking">Filósofo 3</div>
+        <div id="contador-3" class="contador">Comeu: 0 vezes</div>
+      </div>
+      <div>
+        <div id="filosofo-5" class="filosofo thinking">Filósofo 5</div>
+        <div id="contador-5" class="contador">Comeu: 0 vezes</div>
+      </div>
+      <div class="table-center"></div>
+      <!-- Centro da mesa -->
+      <div>
+        <div id="filosofo-4" class="filosofo thinking">Filósofo 4</div>
+        <div id="contador-4" class="contador">Comeu: 0 vezes</div>
+      </div>
+    </div>
+
+    <button id="start-btn">Iniciar Jantar</button>
+
+    <script>
+        const NUM_FILOSOFOS = 5;
+        const ITERACOES = 5;
+        const MAX_FILOSOFOS_COMENDO = NUM_FILOSOFOS - 1; // O garçom permite até n-1 filósofos comerem ao mesmo tempo
+        let comerContador = Array(NUM_FILOSOFOS).fill(0);
+        let filosofosComendo = 0;  // Controla quantos filósofos estão comendo ao mesmo tempo
+        let garcomDisponivel = true;
+
+        // Função para alterar o estado do filósofo e atualizar o contador de refeições
+        function mudarEstado(id, estado) {
+            const philosopher = document.getElementById('filosofo-' + id);
+            const contador = document.getElementById('contador-' + id);
+
+            if (estado === 'comendo') {
+                philosopher.classList.add('eating');
+                philosopher.innerHTML = `Filósofo ${id} Comendo...`;
+                philosopher.classList.remove('thinking', 'waiting');
+                comerContador[id - 1]++;
+                contador.innerHTML = `Comeu: ${comerContador[id - 1]} vezes`;
+            } else if (estado === 'pensando') {
+                philosopher.classList.add('thinking');
+                philosopher.innerHTML = `Filósofo ${id} Pensando...`;
+                philosopher.classList.remove('eating', 'waiting');
+            } else if (estado === 'esperando') {
+                philosopher.classList.add('waiting');
+                philosopher.innerHTML = `Filósofo ${id} Esperando...`;    
+                philosopher.classList.remove('eating', 'thinking');
+            }
+
+            // Se o filósofo comeu 5 vezes, ele termina
+            if (comerContador[id - 1] === ITERACOES) {
+                philosopher.innerHTML = `Filósofo ${id} (Satisfeito)`;
+                philosopher.classList.add('finish');  // Fica vermelho quando satisfeito
+                status.innerHTML = 'Terminado!';
+            }
+        }
+
+        // Função que simula o comportamento do filósofo
+        async function filosofo(id) {
+            for (let i = 0; i < ITERACOES; i++) {
+                mudarEstado(id, 'pensando');
+                await esperarAleatorio(1000, 3000); // Simula o tempo de pensamento
+
+                mudarEstado(id, 'esperando');
+                await esperarAleatorio(1000, 2000); // Simula o tempo de espera
+
+                // Pedir permissão ao garçom para comer
+                while (filosofosComendo >= MAX_FILOSOFOS_COMENDO || !garcomDisponivel) {
+                    await esperarAleatorio(500, 1000); // Espera um pouco e tenta de novo
+                }
+
+                // Permissão concedida
+                filosofosComendo++;
+                mudarEstado(id, 'comendo');
+                await esperarAleatorio(2000, 5000); // Simula o tempo de comer
+
+                // Filósofo termina de comer
+                filosofosComendo--;
+            }
+
+            mudarEstado(id, 'terminado');
+        }
+
+        // Função auxiliar para simular espera assíncrona
+        function esperarAleatorio(min, max) {
+            return new Promise(resolve => setTimeout(resolve, Math.random() * (max - min) + min));
+        }
+
+        // Função para iniciar o jantar
+        function iniciarJantar() {
+            comerContador = Array(NUM_FILOSOFOS).fill(0); // Reinicia os contadores
+            filosofosComendo = 0;  // Reinicia o contador de filósofos comendo
+            for (let i = 1; i <= NUM_FILOSOFOS; i++) {
+                filosofo(i); // Inicia o ciclo para cada filósofo
+            }
+        }
+
+        // Evento do botão de início
+        document.getElementById('start-btn').addEventListener('click', iniciarJantar);
+    </script>
+</body>
+</html>
